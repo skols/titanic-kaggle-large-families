@@ -186,3 +186,55 @@ fol <- formula(Survived ~ Age + Sex + Pclass + FamilySize)
 model <- rpart(fol, method="class", data=data)
 rpart.plot(model, branch=0, branch.type=2, type=1, extra=102, shadow.col="pink", box.col="grey",
            split.col="magenta", main="Decision tree for model")
+
+# Check if removing Pclass changes the overall accuracy
+fol <- formula(Survived ~ Age + Sex + FamilySize)
+rmodel <- rpart(fol, method="class", data=train)
+rpred <- predict(rmodel, newdata=test, type="class")
+print(rmodel)
+accuracy <- modelaccuracy(test, rpred)
+accuracyLabel <- checkaccuracy(accuracy)
+print(c("accuracy8", accuracy, accuracyLabel))
+
+# Adjust for family size for people sharing cabins but not registered as family members
+fol <- formula(Survived ~ Age + Sex + Pclass + FamilySizeAdj)
+rmodel <- rpart(fol, method="class", data=train)
+rpred <- predict(rmodel, newdata=test, type="class")
+print(rmodel)
+accuracy <- modelaccuracy(test, rpred)
+accuracyLabel <- checkaccuracy(accuracy)
+print(c("accuracy9", accuracy, accuracyLabel)) # no change; too few rows
+
+# Check if traveling alone boolean variable is a better predictor than family size
+fol <- formula(Survived ~ Age + Sex + Pclass + TravelAlone)
+train$TravelAlone <- train$FamilySize == 1
+test$TravelAlone <- test$FamilySize == 1
+rmodel <- rpart(fol, method="class", data=train)
+rpred <- predict(rmodel, newdata=test, type="class")
+# print(rmodel)
+accuracy <- modelaccuracy(test, rpred)
+accuracyLabel <- checkaccuracy(accuracy)
+print(c("accuracy10", accuracy, accuracyLabel))
+
+# Check if adding Embarked improves accuracy
+fol <- formula(Survived ~ Age + Sex + Pclass + FamilySize + Embarked)
+rmodel <- rpart(fol, method="class", data=train)
+rpred <- predict(rmodel, newdata=test, type="class")
+# print(rmodel)
+accuracy <- modelaccuracy(test, rpred)
+accuracyLabel <- checkaccuracy(accuracy)
+print(c("accuracy11", accuracy, accuracyLabel))
+
+print(c("best accuracy", bestaccuracy))
+
+# Adding all or many variables as factors to the model is not always a good idea. In fact,
+# sometimes it makes the prediction accuracy worse as shown above. Better to fine tune the
+# machine learning process using the right parameters.
+
+# The best prediction for survival from the analysis above was based on the
+# formula(Survived ~ Age + Sex + Pclass + FamilySize) as applied to Recursive Partitioning
+# and Regression Trees (aka rpart).
+
+# Changing the starting random seed and/or using other training methods
+# (e.g. randomForest, cforest, etc.) may have different results. FamilySize is also a
+# good predictor to include in cforest-based machine learning.
